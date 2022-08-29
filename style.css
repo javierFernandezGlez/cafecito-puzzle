@@ -18,3 +18,7 @@ body {
     height:118px;
     border: 1px solid brown;
 }
+
+#game-finished {
+    display:none;
+}
