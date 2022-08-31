@@ -22,3 +22,8 @@ body {
 #game-finished {
     display:none;
 }
+
+#shuffle {
+    margin-top: 2%;
+}
+

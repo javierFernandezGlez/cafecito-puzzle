@@ -4,19 +4,18 @@ let rows = 3;
 let columns = 3;
 let bigSquare = document.getElementById("square");
 let count = 0;
-let currentSquare;
-let blankSquare;
+let currentSquare; 
 let movesText = document.getElementById("moves");
 let body = document.getElementsByTagName("body")[0];
-let order = [9,8,7,6,5,4,3,2,1];
+let order = [1,2,3,4,5,6,7,8,0];
+let seen = new Set();
 
-function numberOfInversions(array) {
-    const n = array.length;
+function numberOfInversions(matrix) {
     let num = 0;
 
-    for(let i = 0; i < n - 1; i++) {
-        for(let j = i + 1; j < n; j++) {
-            if(array[i] < array[j]) {
+    for(let i = 0; i < 2; i++) {
+        for(let j = i + 1; j < 3; j++) {
+            if(matrix[j][i] > 0 && matrix[j][i] > matrix[i][j]) {
                 num++;
             }
         }
@@ -37,7 +36,7 @@ function randomPermutation(arr) {
 }
 
 function solvable(array) {
-    const invs = numberOfInversions(array);
+    const invs = numberOfInversions(getMatrix(array));
     return invs % 2 === 0;
 }
 
@@ -75,17 +74,18 @@ function equalArrays(arr1, arr2) {
 }
 
 let permutation = randomSolvablePermutation(order);
+//let firstNode = new Node(getMatrix(permutation), null);
 console.log(permutation);
 function displayBoard() {
-    
+    bigSquare.innerHTML = "";
     for(let i = 0; i < rows; i++) {
         for(let j = 0; j < columns; j++) {
             let littleSquare = document.createElement("img");
             littleSquare.id = "(" + i + "," + j + ")";
             console.log(littleSquare.id);
             littleSquare.src = "./" + permutation[count] + ".jpg";
-            count++;
             bigSquare.appendChild(littleSquare);
+            count++;
             littleSquare.addEventListener("dragstart", dragStart);
             littleSquare.addEventListener("dragover", dragOver);
             littleSquare.addEventListener("dragenter", dragEnter);
@@ -98,6 +98,7 @@ function displayBoard() {
 
 displayBoard();
 
+let blankSquare;
 
 function dragStart() {
     currentSquare = this;
@@ -119,10 +120,11 @@ function dragDrop(e) {
     e.preventDefault();
     blankSquare = this;
 }
-
-function dragEnd() {
-
-    if(!blankSquare.src.includes("1")) {
+function move() {
+    if(!blankSquare) {
+        blankSquare = getBlankSquare();
+    }
+    if(!blankSquare.src.includes("0")) {
         return;
     }
     let currentX = parseInt(currentSquare.id[1]);
@@ -153,9 +155,6 @@ function dragEnd() {
         permutation[index1] = permutation[index2];
         permutation[index2] = temp;
     }
-    console.log(permutation);
-    console.log(order);
-    console.log(equalArrays(permutation, order));
     if(equalArrays(permutation, order)) {
         const movesH = document.getElementById("moves-h");
         movesH.innerHTML = "Congratulations! You have completed the puzzle in " + moves + " moves.";
@@ -166,7 +165,10 @@ function dragEnd() {
         movesArray.push(moves); 
     }
     console.log(permutation);
-    console.log(movesArray);
+    console.log(seen);
+}
+function dragEnd() {
+    move();
 }
 const playAgain = document.getElementById("play-again");
 const gameFinished = document.getElementById("game-finished");
@@ -177,23 +179,339 @@ playAgain.addEventListener("click", function() {
     location.reload();
 })
 
-/*shuffle.addEventListener("click", function() {
+shuffle.addEventListener("click", function() {
     const newPermutation = randomSolvablePermutation(order);
     const n = newPermutation.length;
     for(let i = 0; i < n; i++) {
         permutation[i] = newPermutation[i];
     }
-    removeElement("square");
-    const newSquare = document.createElement("div");
-    bigSquare = newSquare;
-    body.appendChild(bigSquare);
     count = 0;
     displayBoard();
-})*/
+    blankSquare = getBlankSquare();
+})
 
 function removeElement(id) {
     let elem = document.getElementById(id);
     return elem.parentNode.removeChild(elem);
 }
+const images = document.getElementsByTagName("img");
+const showNumbers = document.getElementById("show-numbers");
+
+/*showNumbers.addEventListener("click", function() {
+
+    for(let image of images) {
+        let num = image.src[image.src.length - 5];
+        image.innerHTML = num;
+    }
+})*/
+function getBlankSquare() {
+    for(let image of images) {
+        if(image.src.includes("0")) {
+            return image;
+        }
+    }
+}
+
+console.log(getBlankSquare());
+
+function getRightSquare() {
+    const blank = getBlankSquare()
+    const x = parseInt(blank.id[1]);
+    const y = parseInt(blank.id[3]);
+    const isRightEdge = y === columns - 1;
+    if (isRightEdge) {
+        return null
+    }
+    let rightId = "(" + x + "," + (y+1) + ")";
+    for(let image of images) {
+        if(image.id === rightId) {
+            return image;
+        }
+    }
+}
+
+function getLeftSquare() {
+    const blank = getBlankSquare()
+    const x = parseInt(blank.id[1]);
+    const y = parseInt(blank.id[3]);
+    const isLeftEdge = y === 0;
+    if (isLeftEdge) {
+        return null
+    }
+    let leftId = "(" + x + "," + (y-1) + ")";
+    for(let image of images) {
+        if(image.id === leftId) {
+            return image;
+        }
+    }
+}
+
+function getUpSquare() {
+    const blank = getBlankSquare()
+    const x = parseInt(blank.id[1]);
+    const y = parseInt(blank.id[3]);
+    const isUpEdge = x === 0;
+    if (isUpEdge) {
+        return null
+    }
+
+    let upId = "(" + (x-1) + "," + y + ")";
+
+    for(let image of images) {
+        if(image.id === upId) {
+            return image;
+        }
+    }
+}
+
+function getDownSquare() {
+    const blank = getBlankSquare()
+    const x = parseInt(blank.id[1]);
+    const y = parseInt(blank.id[3]);
+    const isDownEdge = x === rows - 1;
+    if (isDownEdge) {
+        return null
+    }
+
+    let downId = "(" + (x+1) + "," + y + ")";
+
+    for(let image of images) {
+        if(image.id === downId) {
+            return image;
+        }
+    }
+}
+
+function handleKeyDown(e) {
+    switch (e.key) {
+        case "ArrowLeft":
+            moveLeft()
+            break
+        case "ArrowRight":
+            moveRight()
+            break
+        case "ArrowUp":
+            moveUp()
+            break
+        case "ArrowDown":
+            moveDown()
+            break
+    }
+}
+document.addEventListener("keydown", handleKeyDown);
+function moveLeft() {
+    const rightSquare = getRightSquare();
+    if (rightSquare) {
+        currentSquare = rightSquare;
+        move();
+        blankSquare = getBlankSquare();
+    }
+}
+function moveRight() {
+    const leftSquare = getLeftSquare()
+    if (leftSquare) {
+        currentSquare = leftSquare;
+        move();
+        blankSquare = getBlankSquare();
+    }
+}
+function moveUp() {
+    const belowSquare = getDownSquare()
+    if (belowSquare) {
+        currentSquare = belowSquare;
+        move();
+        blankSquare = getBlankSquare();
+    }
+}
+function moveDown() {
+    const aboveSquare = getUpSquare()
+    if (aboveSquare) {
+        currentSquare = aboveSquare;
+        move();
+        blankSquare = getBlankSquare();
+    }
+}
+
+function getMatrix(array) {
+    let matrix = [];
+    let index = 0;
+    for(let r = 0; r < rows; r++) {
+        matrix[r] = [];
+        for(let c = 0; c < columns; c++) {
+            matrix[r].push(array[index]);
+            index++;
+        }
+    }
+    return matrix;
+}
+
+function getArray(matrix) {
+    let array = [];
+
+    for(let r = 0; r < rows; r++) {
+        for(let c = 0; c < columns; c++) {
+            array.push(matrix[r][c]);
+        }
+    }
+    return array;
+}
+
+function swap(matrix, row1, column1, row2, column2) {
+    let temp = matrix[row1][column1];
+    matrix[row1][column1] = matrix[row2][column2];
+    matrix[row2][column2] = temp;
+}
+
+function isInSet(array, set) {
+    let n = array.length;
+    for(let s of set) {
+        let flag = true;
+        for(let i = 0; i < n; i++) {
+            if(s[i] !== array[i]) {
+                flag = false;
+                break;
+            }
+        }
+        if(flag) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function getBlankPosition(state) {
+    for(let i = 0; i < rows; i++) {
+        for(let j = 0; j < columns; j++) {
+            if(state[i][j] === 0) {
+                return [i,j];
+            }
+        }
+    }
+}
+
+function getChilds(state, seen) {
+    let childs = [];
+    let blank = getBlankPosition(state);
+    let blankX = blank[0];
+    let blankY = blank[1];
+    const isDownEdge = blankX === rows - 1;
+    const isLeftEdge = blankY === 0;
+    const isRightEdge = blankY === columns - 1;
+    const isUpEdge = blankX === 0;
+
+    if(!isDownEdge) {
+        let copy = JSON.parse(JSON.stringify(state));
+        swap(copy, blankX, blankY, blankX + 1, blankY);
+        if(!seen.has(String(getArray(copy)))) {
+            childs.push(copy);
+        }
+    }
+
+    if(!isLeftEdge) {
+        let copy1 = JSON.parse(JSON.stringify(state));
+        swap(copy1, blankX, blankY, blankX, blankY - 1);
+        if(!seen.has(String(getArray(copy1)))) {
+            childs.push(copy1);
+        }
+    }
+
+    if(!isRightEdge) {
+        let copy2 = JSON.parse(JSON.stringify(state));
+        swap(copy2, blankX, blankY, blankX, blankY + 1);
+        if(!seen.has(String(getArray(copy2)))) {
+            childs.push(copy2);
+        }
+    }
+
+    if(!isUpEdge) {
+        let copy3 = JSON.parse(JSON.stringify(state));
+        swap(copy3, blankX, blankY, blankX - 1, blankY);
+        if(!seen.has(String(getArray(copy3)))) {
+            childs.push(copy3);
+        }
+    }
+    return childs;
+}
+let goal = getMatrix(order);
+console.log(goal);
+console.log(getChilds(goal, new Set()));
+//console.log(getChilds(goal, new Set()));
+
+class Node {
+    constructor(state, cameFrom) {
+        this.state = state;
+        this.cameFrom = cameFrom;
+        if(cameFrom) {
+            this.g = this.cameFrom.g + 1;
+        }
+        else {
+            this.g = 0;
+        }
+        this.h = this.manhattanDistance();
+        this.score = this.h + this.g;
+    }
+
+    manhattanDistance() {
+        let distance = 0;
+        const matrix = this.state;
+        for(let i = 0; i < rows; i++) {
+            for(let j = 0; j < columns; j++) {
+                const value = matrix[i][j];
+                if(value !== 0) {
+                    const goalX = Math.floor((value - 1)/3);
+                    const goalY = (value - 1) % 3;
+                    const dx = i - goalX;
+                    const dy = j - goalY;
+                    distance += Math.abs(dx) + Math.abs(dy);
+                }
+            }
+        }
+        return distance;
+    }
+
+
+    path() {
+        let node = this;
+        let currentPath = [];
+
+        while(node !== null) {
+            currentPath.unshift(node);
+            node = node.cameFrom;
+        }
+        return currentPath;
+    }
+
+    solve() {
+        let count = 1;
+        let queue = [this];
+        console.log(queue);
+        seen.add(String(getArray(queue[0].state)));
+        while(queue.length > 0) {
+            count++;
+            if(count === 50000) {
+                return "KILLED";
+            }
+            queue.sort((a,b) => a.score - b.score);
+            let currentNode = queue.shift();
+            if(String(getArray(currentNode.state)) === String(order)) {
+                console.log("YES");
+                return currentNode.path();
+            }
+            for(let child of getChilds(currentNode.state, seen)) {
+                let childNode = new Node(child, currentNode);
+                queue.push(childNode);
+                seen.add(String(getArray(child)));
+            }
+        } 
+    }
+}
+
+let start = new Node(getMatrix(permutation), null);
+console.log(start);
+const solve = document.getElementById("solve");
+console.log("Distance: ", start.manhattanDistance())
+solve.addEventListener("click", function() {
+    console.log(start.solve());
+})
 
 
