@@ -27,3 +27,11 @@ body {
     margin-top: 2%;
 }
 
+#moves-after {
+    display: none;
+}
+
+button {
+    margin: 2%;
+}
+

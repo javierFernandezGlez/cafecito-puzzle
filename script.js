@@ -175,7 +175,7 @@ function move() {
         movesText.innerHTML = "";
         shuffle.style.display = "none";
         gameFinished.style.display = "flex";
-        gameFinished.style.justifyContent = "space-evenly";
+        gameFinished.style.justifyContent = "center";
         movesArray.push(moves); 
         solve.style.display = "none";
         startAgain.style.display = "none";
@@ -559,7 +559,7 @@ async function displaySolution() {
     
     let movesSolution = moves - 1;
     for await (let state of states) {
-        console.log('politely waiting 1 second')
+        console.log('politely waiting 1/2 second')
         await politeDelay(500)
         let count2 = 0;
         console.log(state);
@@ -573,12 +573,6 @@ async function displaySolution() {
                 littleSquare.src = "./" + state[count2] + ".jpg";
                 bigSquare.appendChild(littleSquare);
                 count2++;
-                littleSquare.addEventListener("dragstart", dragStart);
-                littleSquare.addEventListener("dragover", dragOver);
-                littleSquare.addEventListener("dragenter", dragEnter);
-                littleSquare.addEventListener("dragleave", dragLeave);
-                littleSquare.addEventListener("drop", dragDrop);
-                littleSquare.addEventListener("dragend", dragEnd);
             }
         }
         movesSolution++;
@@ -590,9 +584,62 @@ async function displaySolution() {
     solve.style.display = "none";
     shuffle.style.display = "none";
     gameFinished.style.display = "flex";
-    gameFinished.style.justifyContent = "space-evenly";
+    gameFinished.style.justifyContent = "center";
     startAgain.style.display = "none";
     movesArray.push(moves);
+    solve2.style.display = "none";
+}
+
+const solve2 = document.getElementById("solve2");
+const moves2 = document.getElementById("moves2");
+const movesAfter = document.getElementById("moves-after");
+solve2.addEventListener("click", function() {
+    //console.log(start.solve());
+    displaySolutionAfter();
+})
+
+async function displaySolutionAfter() {
+    gameFinished.style.display = "none";
+    movesAfter.style.display = "block";
+    console.log('value of start node in display solution', start, start.solve)
+    let pathOfNodes = start.solve();
+    const states = [];
+
+    for(let node of pathOfNodes) {
+        states.push(getArray(node));
+    }
+    console.log('result of calling start.solve', pathOfNodes);
+    
+    let newMoves = -1;
+    for await (let state of states) {
+        console.log('politely waiting 1/2 second')
+        await politeDelay(500)
+        let count2 = 0;
+        console.log(state);
+        bigSquare.innerHTML = "";
+        for(let i = 0; i < rows; i++) {
+            for(let j = 0; j < columns; j++) {
+                let littleSquare = document.createElement("img");
+                littleSquare.id = "(" + i + "," + j + ")";
+                console.log(littleSquare.id);
+                console.log(count2)
+                littleSquare.src = "./" + state[count2] + ".jpg";
+                bigSquare.appendChild(littleSquare);
+                count2++;
+            }
+        }
+        newMoves++;
+        moves2.innerHTML = newMoves;
+    }
+    
+    movesAfter.innerHTML = "The computer has completed the puzzle in " + newMoves + " moves.";
+    movesText.innerHTML = "";
+    solve.style.display = "none";
+    shuffle.style.display = "none";
+    gameFinished.style.display = "flex";
+    gameFinished.style.justifyContent = "center";
+    startAgain.style.display = "none";
+    solve2.style.display = "none";
 }
 
 
