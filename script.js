@@ -10,12 +10,25 @@ let body = document.getElementsByTagName("body")[0];
 let order = [1,2,3,4,5,6,7,8,0];
 let seen = new Set();
 
-function numberOfInversions(matrix) {
+/*function numberOfInversions(matrix) {
     let num = 0;
 
     for(let i = 0; i < 2; i++) {
         for(let j = i + 1; j < 3; j++) {
             if(matrix[j][i] > 0 && matrix[j][i] > matrix[i][j]) {
+                num++;
+            }
+        }
+    }
+    return num;
+}*/
+
+function numberOfInversions(array) {
+    let num = 0;
+
+    for(let i = 0; i < 9; i++) {
+        for(let j = i + 1; j < 9; j++) {
+            if(array[i] > 0 && array[j] > array[i]) {
                 num++;
             }
         }
@@ -36,7 +49,7 @@ function randomPermutation(arr) {
 }
 
 function solvable(array) {
-    const invs = numberOfInversions(getMatrix(array));
+    const invs = numberOfInversions(array);
     return invs % 2 === 0;
 }
 
@@ -74,6 +87,7 @@ function equalArrays(arr1, arr2) {
 }
 
 let permutation = randomSolvablePermutation(order);
+let initialState = [...permutation];
 //let firstNode = new Node(getMatrix(permutation), null);
 console.log(permutation);
 function displayBoard() {
@@ -159,10 +173,12 @@ function move() {
         const movesH = document.getElementById("moves-h");
         movesH.innerHTML = "Congratulations! You have completed the puzzle in " + moves + " moves.";
         movesText.innerHTML = "";
-        //shuffle.style.display = "none";
+        shuffle.style.display = "none";
         gameFinished.style.display = "flex";
-        gameFinished.style.justifyContent = "center";
+        gameFinished.style.justifyContent = "space-evenly";
         movesArray.push(moves); 
+        solve.style.display = "none";
+        startAgain.style.display = "none";
     }
     console.log(permutation);
     console.log(seen);
@@ -170,6 +186,7 @@ function move() {
 function dragEnd() {
     move();
 }
+const startAgain = document.getElementById("start-again");
 const playAgain = document.getElementById("play-again");
 const gameFinished = document.getElementById("game-finished");
 const shuffle = document.getElementById("shuffle");
@@ -177,6 +194,17 @@ const shuffle = document.getElementById("shuffle");
 
 playAgain.addEventListener("click", function() {
     location.reload();
+})
+
+startAgain.addEventListener("click", function() {
+    for(let i = 0; i < 9; i++) {
+        permutation[i] = initialState[i];
+    }
+    count = 0;
+    moves = 0;
+    movesText.innerHTML = moves;
+    displayBoard();
+    blankSquare = getBlankSquare();
 })
 
 shuffle.addEventListener("click", function() {
@@ -475,7 +503,7 @@ class Node {
         let currentPath = [];
 
         while(node !== null) {
-            currentPath.unshift(node);
+            currentPath.unshift(node.state);
             node = node.cameFrom;
         }
         return currentPath;
@@ -484,7 +512,6 @@ class Node {
     solve() {
         let count = 1;
         let queue = [this];
-        console.log(queue);
         seen.add(String(getArray(queue[0].state)));
         while(queue.length > 0) {
             count++;
@@ -495,7 +522,8 @@ class Node {
             let currentNode = queue.shift();
             if(String(getArray(currentNode.state)) === String(order)) {
                 console.log("YES");
-                return currentNode.path();
+                let path = currentNode.path();
+                return path;
             }
             for(let child of getChilds(currentNode.state, seen)) {
                 let childNode = new Node(child, currentNode);
@@ -507,11 +535,65 @@ class Node {
 }
 
 let start = new Node(getMatrix(permutation), null);
-console.log(start);
+console.log('value of start node', start);
 const solve = document.getElementById("solve");
 console.log("Distance: ", start.manhattanDistance())
 solve.addEventListener("click", function() {
-    console.log(start.solve());
+    //console.log(start.solve());
+    displaySolution();
 })
+function politeDelay(milliseconds){
+    return new Promise(resolve => {
+        setTimeout(() => resolve(), milliseconds)
+    });
+}
+async function displaySolution() {
+    console.log('value of start node in display solution', start, start.solve)
+    let pathOfNodes = start.solve();
+    const states = [];
+
+    for(let node of pathOfNodes) {
+        states.push(getArray(node));
+    }
+    console.log('result of calling start.solve', pathOfNodes);
+    
+    let movesSolution = moves - 1;
+    for await (let state of states) {
+        console.log('politely waiting 1 second')
+        await politeDelay(500)
+        let count2 = 0;
+        console.log(state);
+        bigSquare.innerHTML = "";
+        for(let i = 0; i < rows; i++) {
+            for(let j = 0; j < columns; j++) {
+                let littleSquare = document.createElement("img");
+                littleSquare.id = "(" + i + "," + j + ")";
+                console.log(littleSquare.id);
+                console.log(count2)
+                littleSquare.src = "./" + state[count2] + ".jpg";
+                bigSquare.appendChild(littleSquare);
+                count2++;
+                littleSquare.addEventListener("dragstart", dragStart);
+                littleSquare.addEventListener("dragover", dragOver);
+                littleSquare.addEventListener("dragenter", dragEnter);
+                littleSquare.addEventListener("dragleave", dragLeave);
+                littleSquare.addEventListener("drop", dragDrop);
+                littleSquare.addEventListener("dragend", dragEnd);
+            }
+        }
+        movesSolution++;
+        movesText.innerHTML = movesSolution;
+    }
+    const movesH = document.getElementById("moves-h");
+    movesH.innerHTML = "The computer has completed the puzzle in " + movesSolution + " moves.";
+    movesText.innerHTML = "";
+    solve.style.display = "none";
+    shuffle.style.display = "none";
+    gameFinished.style.display = "flex";
+    gameFinished.style.justifyContent = "space-evenly";
+    startAgain.style.display = "none";
+    movesArray.push(moves);
+}
+
 
 
